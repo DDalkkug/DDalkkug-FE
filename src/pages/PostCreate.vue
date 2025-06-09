@@ -5,7 +5,7 @@
 
       <form @submit.prevent="handleSubmit" class="space-y-4 overflow-visible">
         <!-- 날짜 -->
-        <div class="">
+        <div>
           <label class="block text-sm font-medium text-gray-300 mb-1">날짜</label>
           <input
             type="date"
