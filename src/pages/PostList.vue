@@ -1,72 +1,204 @@
 <template>
-  <div class="min-h-screen bg-gray-900 text-white p-6">
-    <div class="max-w-4xl mx-auto">
-      <div class="flex justify-between itmes-center mb-6">
-        <router-link
-          to="/"
-          class="px-4 py-2 bg-pink-500 hover:bg-pink-600 rounded text-white font-semibold"
+  <div class="min-h-screen text-white p-6" id="bg">
+    <div class="max-w-6xl mx-auto">
+      <!-- 헤더 -->
+    <div class="flex justify-between items-center mb-6">
+    <!-- 홈 버튼 -->
+    <router-link
+      to="/"
+      class="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded text-white font-semibold shadow-md transition"
+    >
+      홈
+    </router-link>
+
+    <!-- 제목 -->
+     <div style = "background-color: transparent;">
+    <h1 class="text-3xl font-bold text-cyan-400 neon-cyan text-center">
+      전체 게시글
+    </h1></div>
+
+    <!-- 글 작성 버튼 -->
+    <router-link
+      to="/posts/new"
+      class="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded text-white font-semibold shadow-md transition"
+    >
+      글 작성
+  </router-link>
+  </div>
+
+
+      <!-- 필터 -->
+      <div class="mb-4 flex gap-4">
+        <button
+          v-for="type in ['전체', '소주', '맥주']"
+          :key="type"
+          @click="selectedType = type"
+          :class="[
+            'px-4 py-2 rounded font-semibold',
+            selectedType === type ? 'bg-cyan-500 text-white' : 'bg-gray-600 text-gray-200'
+          ]"
         >
-          <p>홈</p>
-        </router-link>
-        <h1 class="text-3xl font-bold text-cyan-400">전체 게시글</h1>
-        <router-link
-          to="/posts/new"
-          class="px-4 py-2 bg-pink-500 hover:bg-pink-600 rounded text-white font-semibold"
-        >
-          <p>글 작성</p>
-        </router-link>
+          {{ type }}
+        </button>
       </div>
-      <div class="space-y-4">
-        <div
-          v-for="post in posts"
+
+      <!-- 게시글 리스트 -->
+      <div class="space-y-6 p-4">
+        <router-link
+          v-for="post in visiblePosts"
           :key="post.id"
-          class="p-4 bg-gray-800 rounded hover:bg-gray-700 transition border-2 border-cyan-400 shadow-[0_0_10px_#22d3ee]"
+          :to="`/posts/${post.id}`"
+          class="flex flex-col md:flex-row justify-between gap-6 p-6 bg-gray-800/70 rounded-lg hover:bg-gray-700/90 transition"
+          id="post-neon"
         >
-          <!-- 네온사인 효과 추가 -->
-          <router-link :to="`/posts/${post.id}`">
-            <p>{{ post.id }}</p>
-            <p>제목 : {{ post.title }}</p>
-            <p>작성자 : {{ post.author }}</p>
-            <p>내용 : {{ post.content }}</p>
-            <p>작성일 : {{ post.date }}</p>
-          </router-link>
-        </div>
+          <div class="flex-1 space-y-3">
+            <p class="text-cyan-300 font-semibold text-lg">📅 날짜: {{ post.drinkingDate }}</p>
+            <p class="text-cyan-300 font-semibold text-lg">💰 총 가격: {{ post.totalPrice.toLocaleString() }}원</p>
+            <div>
+              <p class="font-semibold text-pink-400">📝 메모</p>
+              <p class="ml-2 text-white break-words">{{ post.memo }}</p>
+            </div>
+            <div>
+              <p class="font-semibold text-green-400">🍶 주류 종류</p>
+              <ul class="ml-6 list-disc text-white">
+                <li v-for="drink in post.drinks" :key="drink.id">{{ drink.type }} ({{ drink.quantity }}병)</li>
+              </ul>
+            </div>
+          </div>
+          <div v-if="post.photoUrl" class="w-full md:w-40 h-40 flex-shrink-0 self-center md:self-start">
+            <img :src="post.photoUrl" alt="photo" class="w-full h-full object-cover rounded border border-white" />
+          </div>
+        </router-link>
       </div>
+
+      <!-- 무한 스크롤 감지 영역 -->
+      <div ref="observerTarget" class="h-10"></div>
+      
+<button
+  @click="scrollToTop"
+  class="fixed bottom-6 right-6 w-12 h-12 bg-pink-500 hover:bg-pink-600 text-white 
+         rounded-full shadow-md flex items-center justify-center text-xl transition 
+         duration-200 ease-in-out border border-white/20 hover:scale-105"
+  aria-label="맨 위로 이동"
+  title="맨 위로"
+>↑</button>
+
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
+import axios from "axios";
 
-// 데이터 예시
-const posts = ref([
-  {
-    id: 1,
-    title: "멕시칸 ㄱㄱ?",
-    author: "추창우",
-    date: "2024-06-01",
-    content: "치맥 ㄱㄱ",
-  },
-  {
-    id: 2,
-    title: "문래 ㄱㄱ?",
-    author: "권오윤",
-    date: "2024-05-30",
-    content: "오늘 재워준다. 다 드루와.",
-  },
-]);
+const posts = ref([]);
+const visibleCount = ref(5);
+const selectedType = ref("전체");
+const observerTarget = ref(null);
 
-// const posts = ref([]);
+const fetchPosts = async () => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const res = await axios.get("https://api.ddalkkug.kro.kr/api/v1/calendar-entries", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    posts.value = res.data.data.sort(
+      (a, b) => new Date(b.drinkingDate) - new Date(a.drinkingDate)
+    );
+  } catch (err) {
+    console.error("불러오기 실패", err);
+  }
+};
 
-// const fetchPost = async () => {
-//   try {
-//     const res = await axios.get("");
-//     posts.value = res.data;
-//   } catch (err) {
-//     console.error(err);
-//   }
-// };
+const filteredPosts = computed(() => {
+  if (selectedType.value === "전체") return posts.value;
+  return posts.value.filter((post) =>
+    post.drinks.some((drink) => drink.type === selectedType.value)
+  );
+});
+
+const visiblePosts = computed(() => filteredPosts.value.slice(0, visibleCount.value));
+
+// 무한 스크롤 로직
+const setupObserver = () => {
+  const observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && visibleCount.value < filteredPosts.value.length) {
+      visibleCount.value += 5;
+    }
+  });
+  if (observerTarget.value) observer.observe(observerTarget.value);
+};
+
+const scrollToTop = () => {
+  const bg = document.getElementById("bg");
+  if (bg) {
+    bg.scrollTo({ top: 0, behavior: "smooth" });
+  }
+};
+
+onMounted(() => {
+  fetchPosts();
+  setupObserver();
+});
+
+watch(selectedType, () => {
+  visibleCount.value = 5; // 필터 바뀌면 초기화
+});
 </script>
 
-<style scoped></style>
+<style scoped>
+#bg {
+  overflow-y: auto; /* 세로 스크롤 가능 */
+  max-height: 100vh; /* 화면 높이 제한 */
+  background-image: url('../assets/background-img.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+#post-neon {
+  border: 2px solid #3b82f6;
+  animation: borderFlicker 1s infinite;
+box-shadow:
+  0 0 6px #3b82f6,
+  0 0 12px #3b82f6,
+  0 0 18px #3b82f6;
+}
+
+@keyframes borderFlicker {
+  0% {
+    box-shadow:
+      0 0 6px #3b82f6,
+      0 0 12px #3b82f6,
+      0 0 18px #3b82f6;
+
+  }
+
+  50% {
+    box-shadow:
+      0 0 3px #3b82f6,
+      0 0 6px #3b82f6,
+      0 0 9px #3b82f6;
+
+  }
+
+  100% {
+    box-shadow:
+      0 0 6px #3b82f6,
+      0 0 12px #3b82f6,
+      0 0 18px #3b82f6;
+
+  }
+}
+.neon-cyan {
+  text-shadow:
+    0 0 5px #22d3ee,
+    0 0 10px #22d3ee,
+    0 0 20px #22d3ee,
+    0 0 40px #22d3ee;
+}
+
+</style>
