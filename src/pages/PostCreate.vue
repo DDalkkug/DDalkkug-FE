@@ -110,38 +110,55 @@ const entry = ref({
 const handleImage = (e) => {
   const file = e.target.files[0];
   if (file) {
+    entry.value.rawImageFile = file; // 👈 FormData용 원본 파일 저장
+
     const reader = new FileReader();
     reader.onload = () => {
-      entry.value.image = reader.result;
+      entry.value.image = reader.result; // 미리보기용 base64
     };
     reader.readAsDataURL(file);
   }
 };
 
 const handleSubmit = async () => {
-  const token = localStorage.getItem('accessToken');
-  if (!token) {
-    alert("❌ 로그인 정보가 없습니다. 토큰이 없습니다.");
-    return;
-  }
+  const token = localStorage.getItem("accessToken");
+  // console.log(token)
+  // if (!token) {
+  //   alert("❌ 로그인 정보가 없습니다. 토큰이 없습니다.");
+  //   return;
+  // }
 
-  const payload = {
-    userId: entry.value.userId,
-    drinkingDate: entry.value.drinkingDate,
-    memo: entry.value.memo,
-    totalPrice: entry.value.totalPrice,
-    drinks: [{ type: entry.value.drink.type, quantity: entry.value.drink.quantity }],
-    photoUrl: null,
-  };
+  // const payload = {
+  //   userId: entry.value.userId,
+  //   drinkingDate: entry.value.drinkingDate,
+  //   memo: entry.value.memo,
+  //   totalPrice: entry.value.totalPrice,
+  //   drinks: [{ type: entry.value.drink.type, quantity: entry.value.drink.quantity }],
+  //   photoUrl: null,
+  // };
+
+const formData = new FormData();
+
+// 문자열 또는 숫자 데이터
+formData.append("drinkingDate", entry.value.drinkingDate);
+formData.append("memo", entry.value.memo);
+formData.append("totalPrice", entry.value.totalPrice.toString());
+formData.append("drinks[0].type",  entry.value.drink.type);
+formData.append("drinks[0].type", entry.value.drink.quantity);
+
+// 이미지가 있으면 포함
+if (entry.value.rawImageFile) {
+  formData.append("image", entry.value.rawImageFile); // key는 서버 요구사항에 맞춰 변경
+}
 
   try {
     await axios.post(
       'https://api.ddalkkug.kro.kr/api/v1/calendar-entries',
-      payload,
+      formData,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzQ5NzA2NjExfQ.yIPqkLtDvgz5W152DAQjCDbAgFTccw7ToUAxDzsWbR8djuBc7weCL_puupXdqan0ekz8JbXdWkjLxmvcIdZAVA`,
+          'Content-Type': 'multipart/form-data',
         },
       }
     );
