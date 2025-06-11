@@ -52,11 +52,11 @@
         </p>
       </section>
 
-      <!-- 수정 및 삭제 버튼 (필요시 다시 활성화) -->
-      <!--
-      <div v-if="post.email === loginUser.email" class="mt-6 flex gap-4 justify-center">
+<!-- 삭제 기능 추가해야 함 -->
+      
+      <div v-if="isPostUser" class="mt-6 flex gap-4 justify-center">
         <router-link
-          :to="`/posts/${post.id}/edit`"
+          :to="`/posts/${postId}/edit`"
           class="px-5 py-2 bg-pink-500 hover:bg-pink-600 rounded text-white text-sm font-semibold shadow-md"
         >
           ✏️ 수정
@@ -68,7 +68,7 @@
           🗑 삭제
         </button>
       </div>
-      -->
+
     </div>
   </div>
 </template>
@@ -83,12 +83,8 @@ const router = useRouter();
 const postId = route.params.id;
 
 const post = ref(null);
-const loginUser = ref({ email: "" });
+const userInfo = ref(null);
 
-const fetchLoginUser = async () => {
-  // 예시용 로그인 유저 데이터 (추후 로그인 API 연동)
-  loginUser.value = { email: "chu@gmail.com" };
-};
 
 const fetchPostDetail = async () => {
   try {
@@ -109,6 +105,47 @@ const fetchPostDetail = async () => {
   }
 };
 
+const fetchUserInfo = async () => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const res = await axios.get(
+      "https://api.ddalkkug.kro.kr/api/v1/member/user-info",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    userInfo.value = res.data.data;
+    console.log(userInfo.value);
+  } catch (err) {
+    console.error("유저정보 불러오기 실패", err);
+    alert("유저 정보를 불러오는 데 실패했습니다.");
+  }
+}
+
+const isPostUser = computed(()=> {
+  return post.value && userInfo.value && post.value.userId === userInfo.value.id;
+})
+
+const handleDelete = async () => {
+  const confirmed = confirm("정말 삭제하시겠습니까?");
+  if (!confirmed) return;
+
+  const token = localStorage.getItem("accessToken");
+  try {
+    await axios.delete(
+      `https://api.ddalkkug.kro.kr/api/v1/calendar-entries/${postId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    alert("삭제 완료!");
+    router.push("/posts");
+  } catch (err) {
+    console.error("삭제 실패", err);
+    alert("삭제에 실패했습니다.");
+  }
+};
+
 const formattedDate = computed(() => {
   if (!post.value?.drinkingDate) return "";
   return new Date(post.value.drinkingDate).toLocaleDateString();
@@ -120,8 +157,8 @@ const formattedCreatedAt = computed(() => {
 });
 
 onMounted(() => {
-  fetchLoginUser();
   fetchPostDetail();
+  fetchUserInfo();
 });
 </script>
 
