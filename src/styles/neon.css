@@ -1,0 +1,60 @@
+.neon-border {
+  --neon-color: #f148fb;
+  border: 2px solid #fff;
+  box-shadow:
+    0 0 5px var(--neon-color),
+    0 0 10px var(--neon-color),
+    0 0 15px var(--neon-color),
+    0 0 20px var(--neon-color),
+    inset 0 0 10px var(--neon-color),
+    inset 0 0 20px var(--neon-color);
+}
+
+#logo {
+  /* animation: float 3s ease-in-out infinite; */
+
+  filter: drop-shadow(0 0 5px #f148fb) drop-shadow(0 0 10px #f148fb)
+    drop-shadow(0 0 10px #f148fb);
+  animation: logoFlicker 1s infinite;
+}
+#bg {
+  background-image: url("../assets/background-img.png");
+  background-size: cover;
+  background-position: center;
+}
+
+@keyframes logoFlicker {
+  0% {
+    opacity: 1;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  20% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0.8;
+  }
+  40% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  60% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 1;
+  }
+}
