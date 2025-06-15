@@ -1,16 +1,15 @@
 <template>
   <div class="min-h-screen text-white p-6" id="bg">
-    <div class="max-w-3xl mx-auto bg-gray-900/95 p-8 rounded-xl shadow-lg" id="post-neon">
-      <div class="flex justify-between items-center mb-6">
-        <router-link
-          to="/posts"
-          class="inline-block text-sm bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-white"
+    <div class="max-w-3xl mx-auto bg-gray-900/95 p-8 rounded-xl shadow-lg neon-border" >
+      <div class="flex justify-end items-center mb-6">
+        <BaseButton
+        style="font-size: smaller;"
+        @click="()=>{router.push('/posts')}"
         >
-          📜 전체 기록 보기
-        </router-link>
+          전체 기록 보기
+        </BaseButton>
       </div>
 
-      <!-- 제목과 날짜 flex -->
       <div class="mb-4">
         <h1 class="text-4xl font-extrabold text-pink-400 tracking-wide mb-1">
           날짜: {{ formattedDate }}
@@ -24,7 +23,7 @@
       <hr class="border-gray-700 my-6" />
 
       <section class="mb-8">
-        <p class="text-gray-200 whitespace-pre-line leading-relaxed text-lg">
+        <p class="text-gray-200 whitespace-pre-line leading-relaxed text-lg break-words">
           {{ post?.memo }}
         </p>
       </section>
@@ -47,28 +46,23 @@
       </section>
 
       <section class="mt-8 text-center">
-        <p class="inline-block bg-cyan-700 bg-opacity-80 px-6 py-3 rounded-lg text-2xl font-bold text-cyan-300 shadow-lg">
-          총 가격: {{ post?.totalPrice?.toLocaleString() }} 원
+        <p class="inline-block  px-6 py-3 rounded-lg text-2xl font-bold shadow-lg">
+          총 가격 : {{ post?.totalPrice?.toLocaleString() }} 원
         </p>
       </section>
-
-<!-- 삭제 기능 추가해야 함 -->
-      
-      <div v-if="isPostUser" class="mt-6 flex gap-4 justify-center">
-        <router-link
-          :to="`/posts/${postId}/edit`"
-          class="px-5 py-2 bg-pink-500 hover:bg-pink-600 rounded text-white text-sm font-semibold shadow-md"
+  
+      <div class="mt-6 flex gap-4 justify-center">
+        <BaseButton
+          @click="router.push(`/posts/${postId}/edit`)"
         >
           ✏️ 수정
-        </router-link>
-        <button
+        </BaseButton>
+        <BaseButton
           @click="handleDelete"
-          class="px-5 py-2 bg-red-500 hover:bg-red-600 rounded text-white text-sm font-semibold shadow-md"
         >
           🗑 삭제
-        </button>
+        </BaseButton>
       </div>
-
     </div>
   </div>
 </template>
@@ -77,6 +71,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
+import BaseButton from "../components/BaseButton.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -124,10 +119,6 @@ const fetchUserInfo = async () => {
   }
 }
 
-const isPostUser = computed(()=> {
-  return post.value && userInfo.value && post.value.userId === userInfo.value.id;
-})
-
 const handleDelete = async () => {
   const confirmed = confirm("정말 삭제하시겠습니까?");
   if (!confirmed) return;
@@ -163,6 +154,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
+@import "../styles/neon.css";
+
+* {
+  overflow: visible;
+}
+
 #bg {
   overflow-y: auto;
   max-height: 100vh;
