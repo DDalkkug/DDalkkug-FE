@@ -1,62 +1,53 @@
 <template>
   <div class="min-h-screen text-white p-6" id="bg">
     <div class="max-w-6xl mx-auto">
-      <!-- 헤더 -->
     <div class="flex justify-between items-center mb-6">
-    <!-- 홈 버튼 -->
-    <router-link
-      to="/"
-      class="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded text-white font-semibold shadow-md transition"
+    <BaseButton
+    class="px-5"
+    @click="()=>{router.push('/')}"
     >
       홈
-    </router-link>
+    </BaseButton>
 
-    <!-- 제목 -->
-     <div style = "background-color: transparent;">
-    <h1 class="text-3xl font-bold text-cyan-400 neon-cyan text-center">
+    <div class="p-3">
+    <h1 class="text-3xl text-center"
+    style="filter: drop-shadow(0 0 3px #00f0ff) drop-shadow(0 0 5px #00f0ff);">
       전체 게시글
-    </h1></div>
+    </h1>
+  </div>
 
-    <!-- 글 작성 버튼 -->
-    <router-link
-      to="/posts/new"
-      class="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded text-white font-semibold shadow-md transition"
+    <BaseButton
+    @click="()=> {router.push('/posts/new')}"
     >
       글 작성
-  </router-link>
+    </BaseButton>
   </div>
-<!-- test -->
 
-      <!-- 필터 -->
-      <div class="mb-4 flex gap-4">
-        <button
+      <div class="mb-4 flex">
+        <BaseButton
           v-for="type in ['전체', '소주', '맥주']"
           :key="type"
           @click="selectedType = type"
-          :class="[
-            'px-4 py-2 rounded font-semibold',
-            selectedType === type ? 'bg-cyan-500 text-white' : 'bg-gray-600 text-gray-200'
-          ]"
+          class="px-5"
         >
           {{ type }}
-        </button>
+        </BaseButton>
       </div>
 
-      <!-- 게시글 리스트 -->
       <div class="space-y-6 p-4">
         <router-link
           v-for="post in visiblePosts"
           :key="post.id"
           :to="`/posts/${post.id}`"
-          class="flex flex-col md:flex-row justify-between gap-6 p-6 bg-gray-800/70 rounded-lg hover:bg-gray-700/90 transition"
-          id="post-neon"
+          class="flex flex-col md:flex-row justify-between gap-6 p-6 bg-gray-800/70 rounded-lg hover:bg-gray-700/90 transition overflow-hidden neon-border"
+          
         >
           <div class="flex-1 space-y-3">
             <p class="text-cyan-300 font-semibold text-lg">📅 날짜: {{ post.drinkingDate }}</p>
             <p class="text-cyan-300 font-semibold text-lg">💰 총 가격: {{ post.totalPrice.toLocaleString() }}원</p>
             <div>
               <p class="font-semibold text-pink-400">📝 메모</p>
-              <p class="ml-2 text-white break-words">{{ post.memo }}</p>
+              <p class="text-gray-200 whitespace-pre-line leading-relaxed text-lg break-words">{{ post.memo }}</p>
             </div>
             <div>
               <p class="font-semibold text-green-400">🍶 주류 종류</p>
@@ -90,6 +81,8 @@
 <script setup>
 import { ref, onMounted, watch, computed } from "vue";
 import axios from "axios";
+import BaseButton from "../components/BaseButton.vue";
+import router from "../router";
 
 const posts = ref([]);
 const visibleCount = ref(5);
@@ -149,6 +142,7 @@ watch(selectedType, () => {
 </script>
 
 <style scoped>
+@import "../styles/neon.css";
 #bg {
   overflow-y: auto; /* 세로 스크롤 가능 */
   max-height: 100vh; /* 화면 높이 제한 */
@@ -192,13 +186,6 @@ box-shadow:
       0 0 18px #3b82f6;
 
   }
-}
-.neon-cyan {
-  text-shadow:
-    0 0 5px #22d3ee,
-    0 0 10px #22d3ee,
-    0 0 20px #22d3ee,
-    0 0 40px #22d3ee;
 }
 
 </style>

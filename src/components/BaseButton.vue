@@ -4,6 +4,7 @@
       class="neon-border flex w-full justify-center rounded-md px-3 py-3 text-lg font-extrabold text-white shadow-xs hover:cursor-pointer disabled:text-gray-500"
       :style="{ '--neon-color': currentColor }"
       v-bind="$attrs"
+      :value="modelValue"
       @click="$emit('click', $event)"
       @mouseover="handleHover"
       @mouseleave="handleLeave"
@@ -14,7 +15,7 @@
 </template>
 
 <script setup>
-import { ref, computed, defineProps } from "vue";
+import { ref, defineProps } from "vue";
 
 // ############## 사용 예시 ##############ㅁ
 // <BaseButton
@@ -30,7 +31,6 @@ import { ref, computed, defineProps } from "vue";
 const props = defineProps({
   neonColor: {
     default: "#00f0ff",
-    type: String,
   },
   hoverColor: { default: "#00b8ff", type: String },
 });

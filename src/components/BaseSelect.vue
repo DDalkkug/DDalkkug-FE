@@ -6,6 +6,7 @@
     >
       <select
         v-bind="$attrs"
+        :value="modelValue" 
         class="block w-full rounded-md px-3 py-1.5 text-base text-white outline-0 placeholder:text-gray-400 bg-transparent"
         @change="$emit('update:modelValue', $event.target.value)"
       >
@@ -19,7 +20,9 @@
 import { computed } from "vue";
 
 const props = defineProps({
-  modelValue: [String, Number],
+  modelValue: {
+    type : null,
+  },
   neonColor: {
     type: String,
     default: "#f148fb",

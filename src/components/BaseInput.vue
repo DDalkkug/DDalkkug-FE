@@ -7,6 +7,7 @@
     >
       <input
         v-bind="$attrs"
+        :value="modelValue"
         class="sm:text-md/6 block w-full rounded-md px-3 py-1.5 text-base text-white outline-0 placeholder:text-gray-400"
         @input="$emit('update:modelValue', $event.target.value)"
       />
@@ -45,9 +46,11 @@ import { computed } from "vue";
 
 // 부모 --> 자식 : 값 전달
 const props = defineProps({
-  modelValue: String,
+  modelValue: {
+    type : null,
+  },
   neonColor: {
-    type: String,
+    type: null,
     default: "#f148fb",
   },
 });
