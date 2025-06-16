@@ -1,29 +1,20 @@
 <template>
-  <div class="min-h-screen text-white p-6" id="bg">
+  <div class="min-h-screen text-white p-4 sm:p-6" id="bg">
     <div class="max-w-6xl mx-auto">
-    <div class="flex justify-between items-center mb-6">
-    <BaseButton
-    class="px-5"
-    @click="()=>{router.push('/')}"
-    >
-      홈
-    </BaseButton>
+      <!-- 상단 헤더 -->
+      <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+        <BaseButton class="px-5" @click="() => { router.push('/') }">홈</BaseButton>
 
-    <div class="p-3">
-    <h1 class="text-3xl text-center"
-    style="filter: drop-shadow(0 0 3px #00f0ff) drop-shadow(0 0 5px #00f0ff);">
-      전체 게시글
-    </h1>
-  </div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-center flex-1"
+            style="filter: drop-shadow(0 0 3px #00f0ff) drop-shadow(0 0 5px #00f0ff);">
+          전체 게시글
+        </h1>
 
-    <BaseButton
-    @click="()=> {router.push('/posts/new')}"
-    >
-      글 작성
-    </BaseButton>
-  </div>
+        <BaseButton class="px-5" @click="() => { router.push('/posts/new') }">글 작성</BaseButton>
+      </div>
 
-      <div class="mb-4 flex">
+      <!-- 필터 버튼 -->
+      <div class="mb-4 flex flex-wrap gap-3 justify-center sm:justify-start">
         <BaseButton
           v-for="type in ['전체', '소주', '맥주']"
           :key="type"
@@ -34,49 +25,58 @@
         </BaseButton>
       </div>
 
-      <div class="space-y-6 p-4">
+      <!-- 게시글 리스트 -->
+      <div class="space-y-6 p-2 sm:p-4">
         <router-link
           v-for="post in visiblePosts"
           :key="post.id"
           :to="`/posts/${post.id}`"
-          class="flex flex-col md:flex-row justify-between gap-6 p-6 bg-gray-800/70 rounded-lg hover:bg-gray-700/90 transition overflow-hidden neon-border"
-          
+          class="flex flex-col md:flex-row justify-between gap-6 p-4 sm:p-6 bg-gray-800/70 rounded-lg hover:bg-gray-700/90 transition overflow-hidden neon-border"
         >
+          <!-- 텍스트 콘텐츠 -->
           <div class="flex-1 space-y-3">
-            <p class="text-cyan-300 font-semibold text-lg">📅 날짜: {{ post.drinkingDate }}</p>
-            <p class="text-cyan-300 font-semibold text-lg">💰 총 가격: {{ post.totalPrice.toLocaleString() }}원</p>
+            <p class="text-cyan-300 font-semibold text-lg">날짜 : {{ post.drinkingDate }}</p>
+            <p class="text-cyan-300 font-semibold text-lg">총 가격 : {{ post.totalPrice.toLocaleString() }}원</p>
+
             <div>
-              <p class="font-semibold text-pink-400">📝 메모</p>
-              <p class="text-gray-200 whitespace-pre-line leading-relaxed text-lg break-words">{{ post.memo }}</p>
+              <p class="font-semibold text-pink-400">메모</p>
+              <p class="text-gray-200 whitespace-pre-line leading-relaxed text-base sm:text-lg break-words">
+                {{ post.memo }}
+              </p>
             </div>
+
             <div>
-              <p class="font-semibold text-green-400">🍶 주류 종류</p>
-              <ul class="ml-6 list-disc text-white">
+              <p class="font-semibold text-green-400">주류 종류</p>
+              <ul class="ml-6 text-white">
                 <li v-for="drink in post.drinks" :key="drink.id">{{ drink.type }} ({{ drink.quantity }}병)</li>
               </ul>
+              <p class="font-semibold text-green-400">그룹 : {{ groupMap[post.groupId] || '솔플' }}</p>
             </div>
           </div>
-          <div v-if="post.photoUrl" class="w-full md:w-40 h-40 flex-shrink-0 self-center md:self-start">
-            <img :src="post.photoUrl" alt="photo" class="w-full h-full object-cover rounded border border-white" />
+
+          <!-- 이미지 -->
+          <div v-if="post.photoUrl" class="w-full md:w-40 aspect-square flex-shrink-0 self-center md:self-start">
+            <img :src="post.photoUrl" alt="photo" class="w-full h-full object-contain rounded border border-white" />
           </div>
         </router-link>
       </div>
 
       <!-- 무한 스크롤 감지 영역 -->
       <div ref="observerTarget" class="h-10"></div>
-      
-<button
-  @click="scrollToTop"
-  class="fixed bottom-6 right-6 w-12 h-12 bg-pink-500 hover:bg-pink-600 text-white 
-         rounded-full shadow-md flex items-center justify-center text-xl transition 
-         duration-200 ease-in-out border border-white/20 hover:scale-105"
-  aria-label="맨 위로 이동"
-  title="맨 위로"
->↑</button>
 
+      <!-- 스크롤 위로 버튼 -->
+      <button
+        @click="scrollToTop"
+        class="fixed bottom-6 right-6 w-12 h-12 bg-pink-500 hover:bg-pink-600 text-white
+        rounded-full shadow-md flex items-center justify-center text-xl transition 
+        duration-200 ease-in-out border border-white/20 hover:scale-105"
+        aria-label="맨 위로 이동"
+        title="맨 위로"
+      >↑</button>
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted, watch, computed } from "vue";
@@ -88,6 +88,8 @@ const posts = ref([]);
 const visibleCount = ref(5);
 const selectedType = ref("전체");
 const observerTarget = ref(null);
+const groupMap = ref({});
+
 
 const fetchPosts = async () => {
   try {
@@ -102,6 +104,26 @@ const fetchPosts = async () => {
     );
   } catch (err) {
     console.error("불러오기 실패", err);
+  }
+};
+
+
+const fetchGroups = async () => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const res = await axios.get("https://api.ddalkkug.kro.kr/api/v1/group-info", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const map = {};
+    for (const group of res.data.data) {
+      map[group.id] = group.name;
+    }
+    groupMap.value = map;
+  } catch (err) {
+    console.error("그룹 정보 불러오기 실패", err);
   }
 };
 
@@ -131,8 +153,10 @@ const scrollToTop = () => {
   }
 };
 
+
 onMounted(() => {
   fetchPosts();
+  fetchGroups();
   setupObserver();
 });
 

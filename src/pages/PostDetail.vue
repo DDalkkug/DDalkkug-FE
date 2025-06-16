@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen text-white p-6" id="bg">
-    <div class="max-w-3xl mx-auto bg-gray-900/95 p-8 rounded-xl shadow-lg neon-border" >
-      <div class="flex justify-end items-center mb-6">
+    <div v-if="post" class="max-w-3xl mx-auto bg-gray-900/95 p-8 rounded-xl shadow-lg neon-border" >
+      <div class="flex justify-end items-center">
         <BaseButton
         style="font-size: smaller;"
         @click="()=>{router.push('/posts')}"
@@ -10,44 +10,45 @@
         </BaseButton>
       </div>
 
-      <div class="mb-4">
-        <h1 class="text-4xl font-extrabold text-pink-400 tracking-wide mb-1">
-          날짜: {{ formattedDate }}
+      <div class="mb-3">
+        <h1 class="text-4xl font-extrabold text-pink-400 tracking-wide mb-3">
+          날짜 : {{ formattedDate }}
         </h1>
         <div class="flex gap-6 text-gray-400 text-sm font-medium">
-          <p>작성자 ID: <span class="text-white">{{ post?.userId }}</span></p>
-          <p>작성일: <span class="text-white">{{ formattedCreatedAt }}</span></p>
+          <p>작성자 : <span class="text-white">{{ userInfo.nickname }}</span></p>
+          <p>그룹 : <span class="text-white">{{ groupMap[post.groupId] || '솔플' }}</span></p>
+          <p>작성일 : <span class="text-white">{{ formattedCreatedAt }}</span></p>
         </div>
       </div>
 
-      <hr class="border-gray-700 my-6" />
+      <hr class="border-gray-700 mb-3" />
 
       <section class="mb-8">
         <p class="text-gray-200 whitespace-pre-line leading-relaxed text-lg break-words">
-          {{ post?.memo }}
+          {{ post.memo }}
         </p>
       </section>
 
-      <section v-if="post?.photoUrl" class="mb-8 flex justify-center">
+      <section v-if="post.photoUrl" class="mb-8 flex justify-center">
         <img
           :src="post.photoUrl"
           alt="게시글 사진"
-          class="max-w-full max-h-96 rounded-lg border-2 border-white shadow-lg object-contain"
+          class="max-w-full max-h-full object-contain rounded border border-white"
         />
       </section>
 
-      <section v-if="post?.drinks?.length" class="mb-8">
-        <h2 class="text-xl font-semibold text-green-400 mb-3">🍶 주류 정보</h2>
-        <ul class="list-disc list-inside text-white space-y-1 text-lg">
+      <section class="mb-8">
+        <h2 class="text-xl font-semibold text-green-400 mb-3">주류 정보</h2>
+        <ul class="ml-6 text-white space-y-1 text-lg">
           <li v-for="drink in post.drinks" :key="drink.id">
-            종류: <span class="font-semibold">{{ drink.type }}</span> / 이름: <span class="font-semibold">{{ drink.name }}</span> / 수량: <span class="font-semibold">{{ drink.quantity }}</span>병
+            <span class="font-semibold">{{ drink.type }} - {{drink.quantity}}병</span>
           </li>
         </ul>
       </section>
 
       <section class="mt-8 text-center">
         <p class="inline-block  px-6 py-3 rounded-lg text-2xl font-bold shadow-lg">
-          총 가격 : {{ post?.totalPrice?.toLocaleString() }} 원
+          총 가격 : {{ post.totalPrice.toLocaleString() }} 원
         </p>
       </section>
   
@@ -55,12 +56,12 @@
         <BaseButton
           @click="router.push(`/posts/${postId}/edit`)"
         >
-          ✏️ 수정
+          수정
         </BaseButton>
         <BaseButton
           @click="handleDelete"
         >
-          🗑 삭제
+          삭제
         </BaseButton>
       </div>
     </div>
@@ -79,6 +80,7 @@ const postId = route.params.id;
 
 const post = ref(null);
 const userInfo = ref(null);
+const groupMap = ref({});
 
 
 const fetchPostDetail = async () => {
@@ -112,12 +114,30 @@ const fetchUserInfo = async () => {
       }
     );
     userInfo.value = res.data.data;
-    console.log(userInfo.value);
   } catch (err) {
     console.error("유저정보 불러오기 실패", err);
     alert("유저 정보를 불러오는 데 실패했습니다.");
   }
 }
+
+const fetchGroups = async () => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const res = await axios.get("https://api.ddalkkug.kro.kr/api/v1/group-info", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const map = {};
+    for (const group of res.data.data) {
+      map[group.id] = group.name;
+    }
+    groupMap.value = map;
+  } catch (err) {
+    console.error("그룹 정보 불러오기 실패", err);
+  }
+};
 
 const handleDelete = async () => {
   const confirmed = confirm("정말 삭제하시겠습니까?");
@@ -138,18 +158,19 @@ const handleDelete = async () => {
 };
 
 const formattedDate = computed(() => {
-  if (!post.value?.drinkingDate) return "";
+  if (!post.value.drinkingDate) return "";
   return new Date(post.value.drinkingDate).toLocaleDateString();
 });
 
 const formattedCreatedAt = computed(() => {
-  if (!post.value?.createdAt) return "";
+  if (!post.value.createdAt) return "";
   return new Date(post.value.createdAt).toLocaleString();
 });
 
 onMounted(() => {
   fetchPostDetail();
   fetchUserInfo();
+  fetchGroups();
 });
 </script>
 
