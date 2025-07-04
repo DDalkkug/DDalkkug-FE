@@ -17,16 +17,19 @@
 
       <div class="flex justify-between">
         <BaseButton
-          class="min-w-[100px] px-5 text-sm sm:text-lg"
+          class="min-w-[90px] text-sm sm:text-lg"
           @click="() => router.push('/main')"
         >
           홈
         </BaseButton>
-        <BaseButton @click="() => router.push({ path: '/posts', query: {} })">
+        <BaseButton
+          class="min-w-[102px] text-sm sm:text-lg"
+          @click="() => router.push({ path: '/posts', query: {} })"
+        >
           전체 게시글
         </BaseButton>
         <BaseButton
-          class="min-w-[100px] px-5 text-sm sm:text-lg"
+          class="min-w-[90px] text-sm sm:text-lg"
           @click="() => router.push('/posts/new')"
         >
           글 작성
